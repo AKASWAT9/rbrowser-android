@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F1115">
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:gravity="center_vertical"
+        android:background="#171A21"
+        android:padding="4dp">
+
+        <ImageButton android:id="@+id/back" android:layout_width="40dp" android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_media_previous"
+            android:contentDescription="Atras" app:tint="#C9CDD3" xmlns:app="http://schemas.android.com/apk/res-auto"/>
+        <ImageButton android:id="@+id/reload" android:layout_width="40dp" android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_popup_sync"
+            android:contentDescription="Recargar" app:tint="#C9CDD3" xmlns:app="http://schemas.android.com/apk/res-auto"/>
+        <EditText android:id="@+id/url" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1"
+            android:background="#0F1115" android:textColor="#E8EAED" android:textColorHint="#7D838D"
+            android:hint="Buscar o escribir direccion" android:inputType="textUri" android:imeOptions="actionGo"
+            android:maxLines="1" android:paddingHorizontal="12dp" android:textSize="14sp"/>
+        <ImageButton android:id="@+id/menu" android:layout_width="40dp" android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_menu_more"
+            android:contentDescription="Menu" app:tint="#E8EAED" xmlns:app="http://schemas.android.com/apk/res-auto"/>
+    </LinearLayout>
+
+    <ProgressBar android:id="@+id/progress" style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent" android:layout_height="3dp" android:indeterminate="true"
+        android:visibility="gone"/>
+
+    <WebView android:id="@+id/web" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+</LinearLayout>

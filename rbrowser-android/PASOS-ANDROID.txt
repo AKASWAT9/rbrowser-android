@@ -1,0 +1,60 @@
+R BROWSER PARA ANDROID - COMO SACAR EL APK (gratis, con GitHub)
+==============================================================
+
+No hace falta instalar nada en tu PC. GitHub compila el APK por ti.
+
+PASO 1 - Descomprime
+  Descomprime "rbrowser-android.zip". Queda una carpeta llamada
+  "rbrowser-android" con todo adentro (incluida la carpeta .github).
+
+PASO 2 - Crea un repositorio en GitHub
+  a) Entra a github.com y crea una cuenta gratis (o entra a la tuya).
+  b) Arriba a la derecha toca el "+" -> "New repository".
+  c) Ponle un nombre, por ejemplo: rbrowser-android
+  d) Puede ser Private (privado). Toca "Create repository".
+
+PASO 3 - Sube los archivos
+  a) En la pagina del repo vacio, toca el enlace "uploading an existing file".
+  b) Abre la carpeta "rbrowser-android" que descomprimiste.
+  c) Selecciona TODO lo de adentro (Ctrl+A), INCLUYENDO la carpeta .github,
+     y arrastralo a la zona de subida de GitHub.
+  d) Abajo toca "Commit changes".
+
+PASO 4 - Espera a que compile
+  a) Toca la pestania "Actions" arriba.
+  b) Veras un trabajo corriendo ("Build APK"). Tarda unos 5 minutos.
+  c) Cuando termine, deberia tener un chulito verde.
+
+PASO 5 - Descarga el APK
+  a) Entra al trabajo terminado.
+  b) Abajo, en "Artifacts", descarga "R-Browser-Android-APK".
+  c) Es un zip; descomprimelo y adentro esta "app-debug.apk".
+
+PASO 6 - Instala en el telefono
+  a) Pasa "app-debug.apk" a tu Android (cable, WhatsApp, Drive, etc.).
+  b) Abrelo en el telefono. Te pedira permitir "instalar de origen
+     desconocido": aceptalo.
+  c) Instala y abre R Browser.
+
+SI LA COMPILACION FALLA (chulito rojo en Actions):
+  Entra al trabajo, abre el paso "Compilar el APK", copia el error en rojo
+  y mandamelo. Lo corrijo y subes los archivos otra vez.
+
+QUE TRAE LA APP:
+  - Emular iPhone, Windows, Mac o Android (menu -> Dispositivo).
+  - Extractor de links (menu -> Modo extractor): toca un link y se guarda
+    sin abrirlo; limpia los redirects.
+  - Links guardados, con abrir/copiar/exportar.
+  - Bloquear imagenes (mas rapido, menos datos).
+  - Leer codigo QR: menu -> Leer QR de la pagina, o manten presionada una
+    imagen -> Leer codigo QR.
+  - Rechazo de avisos de cookies y senal GPC.
+  - Borrar todo (cookies, historial, cache).
+
+NOTA HONESTA:
+  No pude compilar ni probar esta app desde donde la hice, asi que es la
+  primera version "a ciegas". Si algo falla al compilar o al usarla, dime
+  y lo arreglo.
+  El proxy no va aqui: usa tu app de proxy/VPN aparte, como querias.
+  La emulacion de iPhone convence a la mayoria de los sitios, pero por dentro
+  es el navegador de Android; un sitio muy estricto puede notarlo.
