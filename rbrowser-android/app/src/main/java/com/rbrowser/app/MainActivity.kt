@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity() {
     private var extractMode = false
     private var cookieBanners = true
     private var gpc = true
+    private var blockWebrtc = true
 
     // ---- Dispositivos que puede emular ----
     data class Device(
@@ -94,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         deviceKey = prefs.getString("device", "iphone") ?: "iphone"
         cookieBanners = prefs.getBoolean("banners", true)
         gpc = prefs.getBoolean("gpc", true)
+        blockWebrtc = prefs.getBoolean("webrtc", true)
 
         web = findViewById(R.id.web)
         urlBar = findViewById(R.id.url)
@@ -176,6 +178,27 @@ class MainActivity : AppCompatActivity() {
         o.put("gpu", JSONArray().put(d.gpu[0]).put(d.gpu[1]))
         o.put("languages", JSONArray().put("en-US").put("en"))
         o.put("extract", extractMode); o.put("banners", cookieBanners); o.put("gpc", gpc)
+        o.put("webrtc", blockWebrtc)
+        if (d.chrome) {
+            val ua = JSONObject()
+            ua.put("brands", JSONArray()
+                .put(JSONObject().put("brand", "Chromium").put("version", "130"))
+                .put(JSONObject().put("brand", "Google Chrome").put("version", "130"))
+                .put(JSONObject().put("brand", "Not?A_Brand").put("version", "99")))
+            ua.put("fullVersionList", JSONArray()
+                .put(JSONObject().put("brand", "Chromium").put("version", "130.0.6723.117"))
+                .put(JSONObject().put("brand", "Google Chrome").put("version", "130.0.6723.117"))
+                .put(JSONObject().put("brand", "Not?A_Brand").put("version", "99.0.0.0")))
+            ua.put("uaFullVersion", "130.0.6723.117")
+            if (deviceKey == "windows") {
+                ua.put("platform", "Windows"); ua.put("platformVersion", "15.0.0")
+                ua.put("architecture", "x86"); ua.put("bitness", "64"); ua.put("model", "")
+            } else {
+                ua.put("platform", "Android"); ua.put("platformVersion", "14.0.0")
+                ua.put("architecture", "arm"); ua.put("bitness", "64"); ua.put("model", "K")
+            }
+            o.put("uaData", ua)
+        }
         return o.toString()
     }
 
@@ -389,6 +412,7 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.scan_page_qr),
             (if (cookieBanners) "✓ " else "") + getString(R.string.reject_cookies),
             (if (gpc) "✓ " else "") + getString(R.string.gpc),
+            (if (blockWebrtc) "✓ " else "") + getString(R.string.webrtc),
             getString(R.string.clear_all_data)
         )
         AlertDialog.Builder(this).setItems(opts) { _, i ->
@@ -400,7 +424,8 @@ class MainActivity : AppCompatActivity() {
                 4 -> scanPageQr()
                 5 -> { cookieBanners = !cookieBanners; prefs.edit().putBoolean("banners", cookieBanners).apply(); web.evaluateJavascript("if(window.__RB){window.__RB.banners=$cookieBanners;if($cookieBanners&&window.__rbKillBanners)window.__rbKillBanners();}", null) }
                 6 -> { gpc = !gpc; prefs.edit().putBoolean("gpc", gpc).apply(); applyDevice() }
-                7 -> clearAll()
+                7 -> { blockWebrtc = !blockWebrtc; prefs.edit().putBoolean("webrtc", blockWebrtc).apply(); applyDevice(); web.reload(); toast(getString(if (blockWebrtc) R.string.webrtc_on else R.string.webrtc_off)) }
+                8 -> clearAll()
             }
         }.show()
     }

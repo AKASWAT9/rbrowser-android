@@ -45,13 +45,33 @@
       try { delete window.chrome; } catch (e) {}
     }
 
-    // navigator.userAgentData: en Safari (iPhone/Mac) NO existe. En Chrome
-    // (Windows/Android) la pone la capa nativa (setUserAgentMetadata); aqui
-    // solo la borramos cuando el dispositivo es Apple, para que coincida.
-    if (!cfg.chrome) {
-      try { def(N, 'userAgentData', undefined); } catch (e) {}
-      try { delete Navigator.prototype.userAgentData; } catch (e) {}
-    }
+    // navigator.userAgentData: en Safari (iPhone/Mac) NO existe; en Chrome
+    // (Windows/Android) debe coincidir con el equipo. La capa nativa la pone
+    // via setUserAgentMetadata, pero aqui la reforzamos por si el WebView es
+    // viejo y no soporta esa API (asi nunca se filtra la marca real).
+    try {
+      if (cfg.chrome && cfg.uaData) {
+        var UAD = cfg.uaData;
+        var uaBrands = UAD.brands || [];
+        var uaFull = UAD.fullVersionList || uaBrands;
+        var uaObj = {
+          brands: uaBrands, mobile: !!cfg.mobile, platform: UAD.platform || '',
+          toJSON: function () { return { brands: uaBrands, mobile: !!cfg.mobile, platform: UAD.platform || '' }; },
+          getHighEntropyValues: function (hints) {
+            return Promise.resolve({
+              architecture: UAD.architecture || '', bitness: UAD.bitness || '', brands: uaBrands,
+              fullVersionList: uaFull, mobile: !!cfg.mobile, model: UAD.model || '',
+              platform: UAD.platform || '', platformVersion: UAD.platformVersion || '',
+              uaFullVersion: UAD.uaFullVersion || '', wow64: false
+            });
+          }
+        };
+        def(N, 'userAgentData', uaObj);
+      } else {
+        try { def(N, 'userAgentData', undefined); } catch (e) {}
+        try { delete Navigator.prototype.userAgentData; } catch (e) {}
+      }
+    } catch (e) {}
 
     // Pantalla y ventana coherentes con el dispositivo.
     if (cfg.screen) {
@@ -63,6 +83,7 @@
         var sw = function () { return Math.max(w, window.innerWidth); };
         var sh = function () { return Math.max(h, window.innerHeight + 40); };
         live(S, 'width', sw); live(S, 'height', sh); live(S, 'availWidth', sw); live(S, 'availHeight', function () { return sh() - 40; });
+        try { live(window, 'outerWidth', sw); live(window, 'outerHeight', sh); } catch (e) {}
       }
       def(S, 'colorDepth', 24); def(S, 'pixelDepth', 24);
       if (cfg.dpr) def(window, 'devicePixelRatio', cfg.dpr);
@@ -99,6 +120,15 @@
     } catch (e) {}
 
     if (cfg.gpc) { try { def(N, 'globalPrivacyControl', true); } catch (e) {} }
+
+    // WebRTC: puede filtrar tu IP real aunque uses proxy. Lo neutralizamos.
+    if (cfg.webrtc) {
+      try {
+        var keys = ['RTCPeerConnection', 'webkitRTCPeerConnection', 'mozRTCPeerConnection', 'RTCDataChannel'];
+        for (var i = 0; i < keys.length; i++) { try { def(window, keys[i], undefined); } catch (e) {} }
+        try { if (navigator.mediaDevices) navigator.mediaDevices.enumerateDevices = function () { return Promise.resolve([]); }; } catch (e) {}
+      } catch (e) {}
+    }
 
     // ---------- Extractor de links ----------
     var cleanUrl = function (raw) {

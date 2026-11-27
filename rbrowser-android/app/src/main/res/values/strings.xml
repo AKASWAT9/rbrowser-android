@@ -33,6 +33,9 @@
     <string name="scan_page_qr">Leer QR de la pagina</string>
     <string name="reject_cookies">Rechazar avisos de cookies</string>
     <string name="gpc">Senal No me rastrees (GPC)</string>
+    <string name="webrtc">Bloquear WebRTC (fuga de IP)</string>
+    <string name="webrtc_on">WebRTC bloqueado: tu IP real no se filtra</string>
+    <string name="webrtc_off">WebRTC activado</string>
     <string name="clear_all_data">Borrar todo</string>
     <string name="clear_all_msg">Se borran cookies, historial, cache y datos de los sitios.</string>
 </resources>
