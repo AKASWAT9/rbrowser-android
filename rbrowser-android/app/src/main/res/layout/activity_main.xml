@@ -19,10 +19,11 @@
         <ImageButton android:id="@+id/reload" android:layout_width="40dp" android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_popup_sync"
             android:contentDescription="Recargar" app:tint="#C9CDD3" xmlns:app="http://schemas.android.com/apk/res-auto"/>
-        <EditText android:id="@+id/url" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1"
+        <AutoCompleteTextView android:id="@+id/url" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1"
             android:background="#0F1115" android:textColor="#E8EAED" android:textColorHint="#7D838D"
             android:hint="Buscar o escribir direccion" android:inputType="textUri" android:imeOptions="actionGo"
-            android:maxLines="1" android:paddingHorizontal="12dp" android:textSize="14sp"/>
+            android:maxLines="1" android:paddingHorizontal="12dp" android:textSize="14sp"
+            android:completionThreshold="1" android:dropDownHeight="wrap_content"/>
         <ImageButton android:id="@+id/menu" android:layout_width="40dp" android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless" android:src="@android:drawable/ic_menu_more"
             android:contentDescription="Menu" app:tint="#E8EAED" xmlns:app="http://schemas.android.com/apk/res-auto"/>

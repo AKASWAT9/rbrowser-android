@@ -19,6 +19,7 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.ScriptHandler
+import androidx.webkit.UserAgentMetadata
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.google.zxing.BinaryBitmap
@@ -34,7 +35,7 @@ import java.util.concurrent.Executors
 class MainActivity : AppCompatActivity() {
 
     private lateinit var web: WebView
-    private lateinit var urlBar: EditText
+    private lateinit var urlBar: AutoCompleteTextView
     private lateinit var progress: ProgressBar
     private lateinit var prefs: android.content.SharedPreferences
     private val io = Executors.newCachedThreadPool()
@@ -42,6 +43,17 @@ class MainActivity : AppCompatActivity() {
 
     private var injectHandler: ScriptHandler? = null
     private var assetJs: String = ""
+
+    private val suggestions = ArrayList<String>()
+    private lateinit var suggestAdapter: ArrayAdapter<String>
+    private val seedDomains = listOf(
+        "google.com", "youtube.com", "facebook.com", "instagram.com", "whatsapp.com",
+        "gmail.com", "outlook.com", "amazon.com", "duckduckgo.com", "chatgpt.com",
+        "x.com", "twitter.com", "tiktok.com", "netflix.com", "reddit.com",
+        "wikipedia.org", "yahoo.com", "bing.com", "linkedin.com", "microsoft.com",
+        "apple.com", "paypal.com", "ebay.com", "cnn.com", "github.com",
+        "temu.com", "mercadolibre.com", "office.com", "live.com", "spotify.com"
+    )
 
     // Estado
     private var deviceKey = "iphone"
@@ -92,6 +104,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.reload).setOnClickListener { web.reload() }
         findViewById<ImageButton>(R.id.menu).setOnClickListener { showMenu() }
         urlBar.setOnEditorActionListener { _, _, _ -> go(urlBar.text.toString()); true }
+        setupSuggestions()
 
         setupWeb()
         applyDevice()
@@ -129,7 +142,8 @@ class MainActivity : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView, url: String?) {
                 progress.visibility = View.GONE
-                urlBar.setText(url ?: "")
+                urlBar.setText(url ?: "", false)
+                rememberHost(url)
                 // Reafirma los interruptores en la página ya cargada.
                 view.evaluateJavascript("if(window.__RB){window.__RB.extract=$extractMode;window.__RB.banners=$cookieBanners;if($cookieBanners&&window.__rbKillBanners)window.__rbKillBanners();}", null)
             }
@@ -172,10 +186,62 @@ class MainActivity : AppCompatActivity() {
         web.settings.userAgentString = d.ua
         web.settings.blockNetworkImage = blockImages
         web.settings.loadsImagesAutomatically = !blockImages
+        applyClientHints()
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             injectHandler?.remove()
             injectHandler = WebViewCompat.addDocumentStartJavaScript(web, buildScript(), setOf("*"))
         }
+    }
+
+    // Cabeceras Client Hints (Sec-CH-UA): deben coincidir con el dispositivo.
+    // En Chrome real existen; en Safari no. No se pueden quitar del motor, pero
+    // al menos evitamos que digan "Android" cuando emulamos otro equipo.
+    private fun applyClientHints() {
+        if (!WebViewFeature.isFeatureSupported(WebViewFeature.USER_AGENT_METADATA)) return
+        try {
+            val b = UserAgentMetadata.Builder()
+            if (dev().chrome) {
+                val brands = listOf(
+                    UserAgentMetadata.BrandVersion.Builder().setBrand("Chromium").setMajorVersion("130").setFullVersion("130.0.6723.117").build(),
+                    UserAgentMetadata.BrandVersion.Builder().setBrand("Google Chrome").setMajorVersion("130").setFullVersion("130.0.6723.117").build(),
+                    UserAgentMetadata.BrandVersion.Builder().setBrand("Not?A_Brand").setMajorVersion("99").setFullVersion("99.0.0.0").build()
+                )
+                b.setBrandVersionList(brands).setFullVersion("130.0.6723.117").setMobile(dev().mobile).setWow64(false)
+                if (deviceKey == "windows") b.setPlatform("Windows").setPlatformVersion("15.0.0").setArchitecture("x86").setBitness(64).setModel("")
+                else b.setPlatform("Android").setPlatformVersion("14.0.0").setArchitecture("arm").setBitness(64).setModel("K")
+            } else {
+                val brands = listOf(
+                    UserAgentMetadata.BrandVersion.Builder().setBrand("Not?A_Brand").setMajorVersion("99").setFullVersion("99.0.0.0").build()
+                )
+                b.setBrandVersionList(brands).setFullVersion("").setWow64(false)
+                if (deviceKey == "mac") b.setPlatform("macOS").setPlatformVersion("10.15.7").setArchitecture("").setBitness(64).setModel("").setMobile(false)
+                else b.setPlatform("iOS").setPlatformVersion("18.1.0").setArchitecture("").setBitness(64).setModel("").setMobile(true)
+            }
+            WebSettingsCompat.setUserAgentMetadata(web.settings, b.build())
+        } catch (e: Exception) {}
+    }
+
+    // ---- Sugerencias de dominios en la barra ----
+    private fun setupSuggestions() {
+        suggestions.clear()
+        val hist = try { JSONArray(prefs.getString("history", "[]")) } catch (e: Exception) { JSONArray() }
+        for (i in 0 until hist.length()) suggestions.add(hist.getString(i))
+        for (d in seedDomains) if (!suggestions.contains(d)) suggestions.add(d)
+        suggestAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, suggestions)
+        urlBar.setAdapter(suggestAdapter)
+        urlBar.threshold = 1
+        urlBar.setOnItemClickListener { _, _, pos, _ -> suggestAdapter.getItem(pos)?.let { go(it) } }
+    }
+    private fun rememberHost(url: String?) {
+        if (url.isNullOrEmpty()) return
+        val host = try { java.net.URI(url).host } catch (e: Exception) { null } ?: return
+        if (host.isEmpty()) return
+        val arr = try { JSONArray(prefs.getString("history", "[]")) } catch (e: Exception) { JSONArray() }
+        for (i in 0 until arr.length()) if (arr.getString(i) == host) return
+        val out = JSONArray().put(host)
+        for (i in 0 until arr.length()) { if (out.length() >= 60) break; out.put(arr.get(i)) }
+        prefs.edit().putString("history", out.toString()).apply()
+        if (!suggestions.contains(host)) { suggestions.add(0, host); suggestAdapter.notifyDataSetChanged() }
     }
 
     private fun loadMain(url: String) {

@@ -45,6 +45,14 @@
       try { delete window.chrome; } catch (e) {}
     }
 
+    // navigator.userAgentData: en Safari (iPhone/Mac) NO existe. En Chrome
+    // (Windows/Android) la pone la capa nativa (setUserAgentMetadata); aqui
+    // solo la borramos cuando el dispositivo es Apple, para que coincida.
+    if (!cfg.chrome) {
+      try { def(N, 'userAgentData', undefined); } catch (e) {}
+      try { delete Navigator.prototype.userAgentData; } catch (e) {}
+    }
+
     // Pantalla y ventana coherentes con el dispositivo.
     if (cfg.screen) {
       var S = Screen.prototype;
